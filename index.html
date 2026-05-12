@@ -27,11 +27,11 @@
         <div class="main-layout">
             <div class="controls">
                 <div class="control-item"><label>本金 (NT$): <span id="v1" class="val-tag"></span></label><input type="range" id="initSum" min="0" max="1000000" step="10000" value="100000"></div>
-                <div class="control-item"><label>每月投入 (NT$): <span id="v2" class="val-tag"></span></label><input type="range" id="monthly" min="0" max="100000" step="1000" value="10000"></div>
-                <div class="control-item"><label>預期報酬 (%): <span id="v3" class="val-tag"></span></label><input type="range" id="rate" min="1" max="15" step="0.5" value="7"></div>
-                <div class="control-item"><label>投資年限 (年): <span id="v4" class="val-tag"></span></label><input type="range" id="years" min="1" max="40" step="1" value="20"></div>
-                <div class="control-item" style="background: #fff3e0;"><label>內扣費用 (%): <span id="v5" class="val-tag"></span></label><input type="range" id="cost" min="0" max="2.5" step="0.05" value="0.5"></div>
-                <div class="control-item" style="background: #fff3e0;"><label>通貨膨脹 (%): <span id="v6" class="val-tag"></span></label><input type="range" id="inflation" min="0" max="5" step="0.1" value="2"></div>
+                <div class="control-item"><label>每月投入 (NT$): <span id="v2" class="val-tag"></span></label><input type="range" id="monthly" min="0" max="100000" step="1000" value="3000"></div>
+                <div class="control-item"><label>預期報酬 (%): <span id="v3" class="val-tag"></span></label><input type="range" id="rate" min="1" max="15" step="0.1" value="3"></div>
+                <div class="control-item"><label>投資年限 (年): <span id="v4" class="val-tag"></span></label><input type="range" id="years" min="1" max="40" step="1" value="5"></div>
+                <div class="control-item" style="background: #fff3e0;"><label>內扣費用 (%): <span id="v5" class="val-tag"></span></label><input type="range" id="cost" min="0" max="3" step="0.05" value="0.5"></div>
+                <div class="control-item" style="background: #fff3e0;"><label>通貨膨脹 (%): <span id="v6" class="val-tag"></span></label><input type="range" id="inflation" min="0" max="8" step="0.1" value="2"></div>
                 <div class="control-item full-width" style="background: #fbe9e7;"><label>預估獲利稅率 (%): <span id="v7" class="val-tag"></span></label><input type="range" id="tax" min="0" max="40" step="1" value="10"></div>
                 
                 <div class="result-panel">
@@ -91,12 +91,33 @@
             document.getElementById('finalTotal').innerText = 'NT$ ' + nominalData[nominalData.length-1].toLocaleString();
             document.getElementById('realPower').innerText = 'NT$ ' + realData[realData.length-1].toLocaleString();
 
-            let insightText = "<b>[策略洞察]</b> ";
-            if (parseFloat(document.getElementById('inflation').value) >= parseFloat(document.getElementById('rate').value)) {
-                insightText += "<span style='color:red;'>警告：您的報酬率低於通膨，財富正在縮水中！</span>";
-            } else {
-                insightText += "雖然未來數字很大，但請參考「實質購買力」才是您真正的生活水準。";
+            // --- 優化後的導讀邏輯 ---
+            let insightText = "<b>[策略診斷報告]</b><br>";
+            const realReturn = (rawRate - cost - parseFloat(document.getElementById('inflation').value));
+
+            // 1. 成本檢查
+            if (cost > 1.2) {
+                insightText += "❌ <b>費用過高：</b>這支 ETF 的內扣成本太重了，長期會吃掉你約 20-30% 的潛在獲利。<br>";
+            } else if (cost < 0.3) {
+                insightText += "✅ <b>優質成本：</b>極低的摩擦力，讓你的每一分錢都有效地進入複利循環。<br>";
             }
+            
+            // 2. 實質購買力檢查
+            if (realReturn <= 0) {
+                insightText += "⚠️ <b>負成長預警：</b>你的報酬率跟不上通膨與成本，這意味著雖然數字變多，但未來能買的東西反而變少了。<br>";
+            } else if (realReturn < 3) {
+                insightText += "💡 <b>平庸陷阱：</b>實質增長僅有 " + realReturn.toFixed(1) + "%，資產僅能緩慢爬行，建議優化標的。<br>";
+            }
+            
+            // 3. 時間與波動檢查
+            if (years < 15) {
+                insightText += "⏳ <b>時間維度不足：</b>複利尚未進入噴發期，這段期間『本金大小』比報酬率更重要。<br>";
+            } else if (rawRate > 10) {
+                insightText += "🎢 <b>高空行走：</b>追求 10% 以上高報酬代表過程將極度顛簸，請確保不會在半路驚慌下車。<br>";
+            } else {
+                insightText += "🎯 <b>黃金配置：</b>合理的報酬與時間安排，只要維持紀律，成功的機率極高。";
+            }
+            
             document.getElementById('insight').innerHTML = insightText;
 
             if (myChart) myChart.destroy();
